@@ -6,28 +6,33 @@ excel 配置类
 type EventLogSetting struct {
 
 	// 无意义id
-	id int
+	Id int
 
 	//上传数据的标识名
-	name string
+	Name string
 
 	//对应的日志下标
-	csvIndex byte
+	CsvIndex byte
 
 	//对应的java类型
-	dataType byte
+	DataType string
 
 	//对应的数数处理的type类型
-	ssType string
+	SsType string
 
 	//事件名
-	eventName string
+	EventName string
 
 	//后台日志名
-	recordName string
+	RecordName string
 
-	common bool
+	// 公共字段
+	Common bool `storage:"index"`
 
 	//日志类型
-	logType string
+	LogType string
+}
+
+func (that *EventLogSetting) Identity() string {
+	return that.RecordName + "_" + that.SsType + "_" + that.EventName
 }
