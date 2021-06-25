@@ -103,7 +103,7 @@ func retryHttpPost(value []byte, retry int) {
 			retryHttpPost(value, retry)
 		}
 	}()
-	//httpPost(value)
+	httpPost(value)
 }
 
 func httpPost(jsonValue []byte) {
