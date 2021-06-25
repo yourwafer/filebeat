@@ -194,6 +194,9 @@ func scanFile(path string, position int64, process func(position int64, lines []
 	buffer := bytes.NewBuffer(nil)
 	cache := make([]byte, 128*1024)
 	var offset = position
+	if offset < 0 {
+		offset = 0
+	}
 	ret, err := file.Seek(offset, 0)
 	if err != nil {
 		log.Panic(path, "Seek失败", err)
