@@ -87,6 +87,7 @@ func RegisterEvent(systemConfig *model.AppConfig, serverConfig *model.ServerConf
 func StartScanLog(duration time.Duration, process func(recordName string, lines []string)) {
 	ticker = time.NewTicker(duration)
 	stopChan = make(chan struct{})
+	log.Println("启动定时调度任务，时间间隔为", duration)
 	go func() {
 		for {
 			select {
