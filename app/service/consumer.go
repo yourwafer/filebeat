@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -66,6 +67,7 @@ func httpProcess(recordName string, lines []string, eventConfigs []*model.EventC
 		return
 	}
 	lineSplits := splitLines(lines)
+LOOP:
 	for _, eventConfig := range eventConfigs {
 		rows := make([]map[string]interface{}, 0, linesSize)
 		for _, cols := range lineSplits {
@@ -86,24 +88,34 @@ func httpProcess(recordName string, lines []string, eventConfigs []*model.EventC
 		if err != nil {
 			panic(err.Error())
 		}
-		retryHttpPost(jsonValue, 1)
+		for retryTimes := 1; retryTimes <= 5; retryTimes++ {
+			err = retryHttpPost(jsonValue)
+			if err == nil {
+				continue LOOP
+			}
+			log.Println(retryTimes, "上传失败，等待2s进行重试", err)
+			time.Sleep(2 * time.Second)
+		}
+		log.Panic("重试次数达到5次，进程直接退出", err)
 	}
 }
 
-func retryHttpPost(value []byte, retry int) {
+func retryHttpPost(value []byte) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
-			if retry >= 3 {
-				log.Panic("重试次数达到", retry, "进程直接退出")
+			switch e.(type) {
+			case error:
+				err = e.(error)
+			case string:
+				err = errors.New(e.(string))
+			default:
+				log.Println("上传失败未知错误", e)
+				err = errors.New("上传失败")
 			}
-			sleepWait := time.Second
-			log.Println("http发送失败，等待重试", sleepWait)
-			time.Sleep(sleepWait)
-			retry++
-			retryHttpPost(value, retry)
 		}
 	}()
 	httpPost(value)
+	return
 }
 
 func httpPost(jsonValue []byte) {
